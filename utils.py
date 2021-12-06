@@ -10,7 +10,7 @@ def calculate_outputs_and_gradients(inputs, model, target_label_idx, cuda=False)
     for input in inputs:
         input = pre_processing(input, cuda)
         output = model(input)
-        output = F.softmax(output, dim=1)
+        # output = F.softmax(output, dim=1)
         if target_label_idx is None:
             target_label_idx = torch.argmax(output, 1).item()
         index = np.ones((output.size()[0], 1)) * target_label_idx
@@ -44,7 +44,7 @@ def pre_processing(obs, cuda):
 # generate the entire images
 def generate_entrie_images(img_origin, img_grad, img_grad_overlay, img_integrad, img_integrad_overlay):
     blank = np.ones((img_grad.shape[0], 10, 3), dtype=np.uint8) * 255
-    blank_hor = np.ones((10, 20 + img_grad.shape[0] * 3, 3), dtype=np.uint8) * 255
+    blank_hor = np.ones((10, 20 + img_grad.shape[1] * 3, 3), dtype=np.uint8) * 255
     upper = np.concatenate([img_origin[:, :, (2, 1, 0)], blank, img_grad_overlay, blank, img_grad], 1)
     down = np.concatenate([img_origin[:, :, (2, 1, 0)], blank, img_integrad_overlay, blank, img_integrad], 1)
     total = np.concatenate([upper, blank_hor, down], 0)

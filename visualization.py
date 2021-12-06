@@ -28,7 +28,7 @@ def compute_threshold_by_top_percentage(attributions, percentage=60, plot_distri
     threshold_idx = np.where(cum_sum >= percentage)[0][0]
     threshold = sorted_attributions[threshold_idx]
     if plot_distribution:
-        raise NotImplementedError 
+        raise NotImplementedError
     return threshold
 
 def polarity_function(attributions, polarity):
@@ -52,7 +52,7 @@ def visualize(attributions, image, positive_channel=G, negative_channel=R, polar
     elif polarity == 'positive':
         attributions = polarity_function(attributions, polarity=polarity)
         channel = positive_channel
-    
+
     # convert the attributions to the gray scale
     attributions = convert_to_gray_scale(attributions)
     attributions = linear_transform(attributions, clip_above_percentile, clip_below_percentile, 0.0, plot_distribution=plot_distribution)

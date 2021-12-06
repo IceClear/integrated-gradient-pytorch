@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from torchvision import models
+from torchvision import datasets, models, transforms
 import cv2
 import torch.nn.functional as F
 from utils import calculate_outputs_and_gradients, generate_entrie_images
@@ -8,6 +8,7 @@ from integrated_gradients import random_baseline_integrated_gradients
 from visualization import visualize
 import argparse
 import os
+from koncept512 import model_qa
 
 parser = argparse.ArgumentParser(description='integrated-gradients')
 parser.add_argument('--cuda', action='store_true', help='if use the cuda to do the accelartion')
@@ -21,7 +22,7 @@ if __name__ == '__main__':
         os.mkdir('results/')
     if not os.path.exists('results/' + args.model_type):
         os.mkdir('results/' + args.model_type)
-    
+
     # start to create models...
     if args.model_type == 'inception':
         model = models.inception_v3(pretrained=True)
@@ -31,6 +32,9 @@ if __name__ == '__main__':
         model = models.resnet18(pretrained=True)
     elif args.model_type == 'vgg19':
         model = models.vgg19_bn(pretrained=True)
+    elif args.model_type == 'koncept':
+        model = model_qa(num_classes=1)
+        model.load_state_dict(torch.load('../koniq10k/KonCept512.pth'))
     model.eval()
     if args.cuda:
         model.cuda()
@@ -39,7 +43,10 @@ if __name__ == '__main__':
     if args.model_type == 'inception':
         # the input image's size is different
         img = cv2.resize(img, (299, 299))
-    img = img.astype(np.float32) 
+    elif args.model_type == 'koncept':
+        # img = cv2.resize(img, (512, 384))
+        img = cv2.resize(img, (299, 299))
+    img = img.astype(np.float32)
     img = img[:, :, (2, 1, 0)]
     # calculate the gradient and the label index
     gradients, label_index = calculate_outputs_and_gradients([img], model, None, args.cuda)
@@ -47,7 +54,7 @@ if __name__ == '__main__':
     img_gradient_overlay = visualize(gradients, img, clip_above_percentile=99, clip_below_percentile=0, overlay=True, mask_mode=True)
     img_gradient = visualize(gradients, img, clip_above_percentile=99, clip_below_percentile=0, overlay=False)
 
-    # calculae the integrated gradients 
+    # calculae the integrated gradients
     attributions = random_baseline_integrated_gradients(img, model, label_index, calculate_outputs_and_gradients, \
                                                         steps=50, num_random_trials=10, cuda=args.cuda)
     img_integrated_gradient_overlay = visualize(attributions, img, clip_above_percentile=99, clip_below_percentile=0, \
